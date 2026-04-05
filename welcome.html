@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP_OS_v5.0_LEGEND</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff41; 
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 5;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #terminal {
+            width: 85%;
+            max-width: 900px;
+            height: 75vh;
+            background: rgba(10, 10, 10, 0.95);
+            padding: 30px;
+            border: 1px solid #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            position: relative;
+            z-index: 1;
+            overflow-y: scroll;
+        }
+
+        #glitch-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 255, 65, 0.1);
+            color: #00ff41;
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            font-size: 8rem;
+            font-weight: bold;
+            z-index: 99;
+            text-shadow: 4px 4px #ff0000, -4px -4px #0000ff;
+            pointer-events: none;
+        }
+
+        .alert-box{
+        color: #ff6b6b;
+        font-weight: bold;
+        }
+
+        .glitch-active { 
+            animation: shake 0.15s infinite; 
+            filter: invert(1); 
+        }
+
+        @keyframes shake {
+            0% { transform: translate(2px, 2px); }
+            25% { transform: translate(-2px, -2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        #terminal::-webkit-scrollbar { width: 8px; }
+        #terminal::-webkit-scrollbar-track { background: #0a0a0a; }
+        #terminal::-webkit-scrollbar-thumb { background: #00ff41; border-radius: 10px; }
+
+        .input-area { display: flex; margin-top: 15px; }
+        #prompt { color: #00ff41; font-weight: bold; margin-right: 10px; white-space: nowrap; }
+        input {
+            background: transparent; border: none; color: #00ff41;
+            font-family: inherit; font-size: 1.1em; outline: none; flex-grow: 1;
+        }
+
+        @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.3;} 100% {opacity: 1;} }
+        
+        .success { color: #fff; text-shadow: 0 0 5px #00ff41; }
+        .teammate { color: #58a6ff; font-weight: bold; text-transform: uppercase; }
+        .cmd-list { color: #ffb100; font-weight: bold; }
+        .guide { color: #888; font-style: italic; margin: 10px 0; border-left: 2px solid #444; padding-left: 10px; }
+        .matrix-text { color: #00ff41; font-size: 10px; line-height: 8px; word-break: break-all; }
+        pre { font-size: 11px; line-height: 1.1; color: #00ff41; margin: 10px 0; }
+    </style>
+</head>
+<body id="main-body">
+
+<div id="glitch-overlay">ERROR</div>
+<div id="terminal">
+    <div id="output">
+        [ SYSTEM BOOTING... ]<br>
+        [ KERNEL V.4.15.0-CSP ]<br>
+        [ ENCRYPTION: ASMITA-PROTOCOL-9 ]<br><br>
+        >>> SECURE CHANNEL READY.<br>
+        >>> ENTER ADMIN PASSPHRASE:<br><br>
+    </div>
+    
+    <div class="input-area" id="input-container">
+        <span id="prompt">ACCESS_KEY:</span>
+        <input type="password" id="user-input" autofocus autocomplete="off">
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById('user-input');
+    const output = document.getElementById('output');
+    const prompt = document.getElementById('prompt');
+    const term = document.getElementById('terminal');
+    const body = document.getElementById('main-body'); 
+    const overlay = document.getElementById('glitch-overlay');
+
+    let stage = "PASS";
+    let alertElement = null;
+    let guideElement = null;
+    let helpActivated = false;
+
+    document.addEventListener('click', () => input.focus());
+
+    input.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            const val = input.value.trim().toLowerCase();
+            input.value = '';
+            await process(val);
+        }
+    });
+
+    async function triggerGlitch() {
+        body.classList.add('glitch-active');
+        overlay.style.display = 'flex';
+        await new Promise(r => setTimeout(r, 1200)); 
+        body.classList.remove('glitch-active');
+        overlay.style.display = 'none';
+    }
+
+    async function print(text, isAlert = false, isGuide = false) {
+        const div = document.createElement('div');
+        if (isAlert) div.className = "alert-box";
+        if (isGuide) div.className = "guide";
+        div.innerHTML = text;
+        output.appendChild(div);
+        term.scrollTop = term.scrollHeight;
+        return div;
+    }
+
+    async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function process(cmd) {
+        if (stage === "PASS") {
+            if (cmd === "asmita") {
+                stage = "LOGGED_IN";
+                input.type = "text";
+                await print("<span class='success'>ADMIN AUTHENTICATED.</span>");
+                await print("<div style='margin-top:10px; color:#ffb100'>[SYSTEM]: Enter 'help' to begin session.</div><br>");
+                prompt.textContent = "asmita@csp:~$";
+            } else {
+                await print("<span style='color:red'>ACCESS DENIED.</span><br>");
+            }
+            return;
+        }
+
+        if (cmd === "help") {
+            await print("--------------------------------------------------");
+            await print("<span class='cmd-list'>ls, cd, cat, clear, whoami, matrix, sudo, squad</span>");
+            await print("<span class='cmd-list'>[teammate_name] example ==> enter: vasanth</span>");
+            await print("--------------------------------------------------");
+            if (!helpActivated) {
+                helpActivated = true;
+                alertElement = await print("[!] UNREAD MISSION DATA: /home/welcome.txt", true);
+                guideElement = await print("<b>GUIDE:</b><br>> Type 'cd home' to find the file.", false, true);
+            }
+            await print("<br>");
+        }
+
+        else if (cmd === "matrix") {
+            const originalContent = output.innerHTML;
+            output.innerHTML = "";
+            for(let i=0; i<54; i++) {
+                let line = "";
+                for(let j=0; j<120; j++) line += Math.floor(Math.random()*2);
+                await print("<div class='matrix-text'>" + line + "</div>");
+                await sleep(50); 
+            }
+            output.innerHTML = originalContent;
+            await print("<span class='success'>[SYSTEM]: Matrix bypass complete. Reality restored.</span><br>");
+        }
+
+        else if (cmd === "sudo") {
+            await print("<span style='color:red; font-weight:bold;'>[CRITICAL] OVERRIDING SYSTEM PERMISSIONS...</span>");
+            for(let i=5; i>0; i--) {
+                await print("<span style='color:red'>SELF-DESTRUCT IN " + i + "...</span>");
+                await sleep(800);
+            }
+            await print("<span class='success'>Just kidding. You are not the root user. Nice try!</span><br>");
+        }
+
+        else if (cmd === "squad") {
+            await print("<span class='loading'>SYNCING SQUAD DATA...</span>");
+            const names = ["VASANTH", "SIMHADRI", "SATWIK", "VINASH", "KEERTHI", "PAVANI", "NITHYA", "LALITHA","ASMITA"];
+            for(let name of names) {
+                await sleep(200);
+                await print("CONNECTING TO " + name + "... [ONLINE]");
+            }
+            await print("<span class='success' style='font-size:1.5em'>CSP SQUAD: 100% OPERATIONAL</span><br>");
+        }
+
+        else if (cmd === "ls") {
+            if (stage === "LOGGED_IN") await print("drwxr-xr-x  <span style='color:#58a6ff'>home/</span><br>");
+            else await print("-rw-r--r--  welcome.txt<br>");
+        } 
+        else if (cmd === "cd home") {
+            stage = "HOME";
+            await print("Entering /home...<br>");
+            if (guideElement) guideElement.innerHTML = "<b>GUIDE:</b><br>> Type 'cat welcome.txt' to finish mission.";
+            prompt.textContent = "asmita@csp:~/home$";
+        } 
+        else if (cmd === "cat welcome.txt") {
+            if (stage === "HOME") {
+                if (alertElement) alertElement.remove();
+                if (guideElement) guideElement.remove();
+                await print(`
+<pre>
+   ______  _____  _____  
+  / ____/ / ___/ / ___ \\ 
+ | |     / /__  | |__/ / 
+ | |     \\___ \\ |  ___/  
+ | |____ ____/ /| |      
+  \\____//_____/ |_|      
+                         
+==========================================
+        WELCOME TO THE CSP TEAM!
+==========================================
+"WE JUST MADE THIS OFFICIAL."
+The mission is set. Glad to have you.
+==========================================
+</pre><br>`);
+            } else { await print("Error: File not found.<br>"); }
+        } 
+        else if (cmd === "asmita") { await print("<span class='teammate'>[ASMITA]</span>: The best person ever :)).<br>"); }
+        else if (cmd === "vasanth") { await print("<span class='teammate'>[VASANTH]</span>: Essential Component.<br>"); }
+        else if (cmd === "simhadri") { await print("<span class='teammate'>[SIMHADRI]</span>: Code-Whisperer.<br>"); }
+        else if (cmd === "satwik") { await print("<span class='teammate'>[SATWIK]</span>: Logic Core Optimized.<br>"); }
+        else if (cmd === "vinash") { await print("<span class='teammate'>[VINASH]</span>: Team Strength +15%.<br>"); }
+        else if (cmd === "keerthi") { await print("<span class='teammate'>[KEERTHI]</span>: Strategic Core.<br>"); }
+        else if (cmd === "pavani") { await print("<span class='teammate'>[PAVANI]</span>: Group Sync Leader.<br>"); }
+        else if (cmd === "nithya") { await print("<span class='teammate'>[NITHYA]</span>: System Stability Confirmed.<br>"); }
+        else if (cmd === "lalitha") { await print("<span class='teammate'>[LALITHA]</span>: Creative Engine.<br>"); }
+        else if (cmd === "clear") { output.innerHTML = ""; }
+        else if (cmd === "whoami") { await print("Authorized CSP User | Admin: Asmita<br>"); }
+        
+        else { 
+            await print(`'${cmd}' unknown. Type <span class='cmd-list'>help</span>.<br>`); 
+            await triggerGlitch(); 
+        }
+    }
+</script>
+</body>
+</html>
